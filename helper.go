@@ -1,8 +1,9 @@
 package goetl_starter
 
 import (
-	"log"
 	"sync"
+
+	logger "github.com/kordar/gologger"
 
 	"github.com/kordar/goetl/engine"
 )
@@ -17,7 +18,7 @@ func Get(name string) *engine.Engine {
 	defer mu.RUnlock()
 	eng, ok := engines[name]
 	if !ok {
-		log.Fatalf("etl engine %s not exist.", name)
+		logger.Fatalf("etl engine %s not exist.", name)
 	}
 	return eng
 }

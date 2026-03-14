@@ -1,7 +1,7 @@
 package goetl_starter
 
 import (
-	"log"
+	logger "github.com/kordar/gologger"
 
 	"github.com/kordar/goetl/engine"
 	"github.com/spf13/cast"
@@ -24,26 +24,26 @@ func (m GoetlModule) Name() string {
 
 func (m GoetlModule) _load(id string, cfg map[string]any) {
 	if id == "" {
-		log.Fatalf("[%s] the attribute id cannot be empty.", m.Name())
+		logger.Fatalf("[%s] the attribute id cannot be empty.", m.Name())
 		return
 	}
 	if m.load == nil {
-		log.Fatalf("[%s] load callback cannot be nil. id=%s", m.Name(), id)
+		logger.Fatalf("[%s] load callback cannot be nil. id=%s", m.Name(), id)
 		return
 	}
 
 	eng, err := m.load(m.Name(), id, cfg)
 	if err != nil {
-		log.Fatalf("[%s] id=%s err=%v", m.Name(), id, err)
+		logger.Fatalf("[%s] id=%s err=%v", m.Name(), id, err)
 		return
 	}
 	if eng == nil {
-		log.Fatalf("[%s] id=%s engine is nil", m.Name(), id)
+		logger.Warnf("[%s] id=%s engine is nil", m.Name(), id)
 		return
 	}
 
 	Provide(id, eng)
-	log.Printf("[%s] loading module '%s' successfully", m.Name(), id)
+	logger.Infof("[%s] loading module '%s' successfully", m.Name(), id)
 }
 
 func (m GoetlModule) Load(value any) {
