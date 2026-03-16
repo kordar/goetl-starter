@@ -2,8 +2,8 @@ github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHk
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/kordar/goetl v0.0.1 h1:3c7f2YJ/8M6adrXnF9FKv7/XZLUhbjroK5Fo3viwdU0=
-github.com/kordar/goetl v0.0.1/go.mod h1:1YdbiOR4RuSso5g4ituwDofUIlHjf9KDn/52/D2wZV4=
+github.com/kordar/goetl v0.0.2 h1:5zzRqMdFV9Q7rGnLpBiiK7qRkbmKB2DcaZeT9RGkJVU=
+github.com/kordar/goetl v0.0.2/go.mod h1:1YdbiOR4RuSso5g4ituwDofUIlHjf9KDn/52/D2wZV4=
 github.com/kordar/gologger v0.0.8 h1:bpbxxOagkXp7TKREji61FrwVljf5X56yvedQsWNVe28=
 github.com/kordar/gologger v0.0.8/go.mod h1:hJF0BnPeo/QSJalJBF0eOG362WHez/Uc5SurSd5cdEo=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
