@@ -1,20 +1,23 @@
 package goetl_starter
 
 import (
+	"fmt"
+
 	logger "github.com/kordar/gologger"
 
 	"github.com/kordar/goetl/engine"
 	"github.com/spf13/cast"
 )
 
-type EngineLoader func(moduleName string, itemID string, item map[string]any) (*engine.Engine, error)
+type EngineLoaderR func(moduleName string, itemID string, item map[string]any) (*engine.Engine, error)
+type EngineLoader func(moduleName string, itemID string, item map[string]any)
 
 type GoetlModule struct {
 	name string
-	load EngineLoader
+	load any
 }
 
-func NewGoetlModule(name string, load EngineLoader) *GoetlModule {
+func NewGoetlModule(name string, load any) *GoetlModule {
 	return &GoetlModule{name: name, load: load}
 }
 
@@ -32,11 +35,17 @@ func (m GoetlModule) _load(id string, cfg map[string]any) {
 		return
 	}
 
-	eng, err := m.load(m.Name(), id, cfg)
+	eng, err, provided := m.callLoad(id, cfg)
 	if err != nil {
 		logger.Fatalf("[%s] id=%s err=%v", m.Name(), id, err)
 		return
 	}
+
+	if provided {
+		logger.Infof("[%s] loading module '%s' successfully", m.Name(), id)
+		return
+	}
+
 	if eng == nil {
 		logger.Warnf("[%s] id=%s engine is nil", m.Name(), id)
 		return
@@ -64,4 +73,51 @@ func (m GoetlModule) Load(value any) {
 }
 
 func (m GoetlModule) Close() {
+}
+
+func (m GoetlModule) callLoad(id string, cfg map[string]any) (*engine.Engine, error, bool) {
+	switch f := m.load.(type) {
+	case EngineLoaderR:
+		eng, err := f(m.Name(), id, cfg)
+		return eng, err, false
+	case func(moduleName string, itemID string, item map[string]any) (*engine.Engine, error):
+		eng, err := f(m.Name(), id, cfg)
+		return eng, err, false
+	case func(moduleName string, itemID string, item map[string]any) *engine.Engine:
+		eng := f(m.Name(), id, cfg)
+		return eng, nil, false
+	case func(itemID string, item map[string]any) (*engine.Engine, error):
+		eng, err := f(id, cfg)
+		return eng, err, false
+	case func(itemID string, item map[string]any) *engine.Engine:
+		eng := f(id, cfg)
+		return eng, nil, false
+	case func(item map[string]any) (*engine.Engine, error):
+		eng, err := f(cfg)
+		return eng, err, false
+	case func(item map[string]any) *engine.Engine:
+		eng := f(cfg)
+		return eng, nil, false
+	case EngineLoader:
+		f(m.Name(), id, cfg)
+		return getProvided(id), nil, getProvided(id) != nil
+	case func(moduleName string, itemID string, item map[string]any):
+		f(m.Name(), id, cfg)
+		return getProvided(id), nil, getProvided(id) != nil
+	case func(itemID string, item map[string]any):
+		f(id, cfg)
+		return getProvided(id), nil, getProvided(id) != nil
+	case func(item map[string]any):
+		f(cfg)
+		return getProvided(id), nil, getProvided(id) != nil
+	default:
+		return nil, fmt.Errorf("unsupported load callback type: %T", m.load), false
+	}
+}
+
+func getProvided(id string) *engine.Engine {
+	mu.RLock()
+	eng := engines[id]
+	mu.RUnlock()
+	return eng
 }

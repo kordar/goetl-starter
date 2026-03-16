@@ -57,3 +57,47 @@ func TestGoetlModule_Load_SingleByID(t *testing.T) {
 		t.Fatalf("engine mismatch: solo")
 	}
 }
+
+func TestGoetlModule_Load_VoidLoader_Provides(t *testing.T) {
+	t.Parallel()
+
+	id := fmt.Sprintf("test_%d_void", time.Now().UnixNano())
+	want := &engine.Engine{}
+
+	m := NewGoetlModule("gorm", func(moduleName string, itemID string, item map[string]any) {
+		_ = moduleName
+		_ = item
+		if itemID != id {
+			t.Fatalf("unexpected id: %s", itemID)
+		}
+		Provide(itemID, want)
+	})
+
+	m.Load(map[string]any{"id": id, "dsn": "x"})
+
+	if Get(id) != want {
+		t.Fatalf("engine mismatch: void")
+	}
+}
+
+func TestGoetlModule_Load_NoErrorReturnLoader(t *testing.T) {
+	t.Parallel()
+
+	id := fmt.Sprintf("test_%d_noerr", time.Now().UnixNano())
+	want := &engine.Engine{}
+
+	m := NewGoetlModule("gorm", func(moduleName string, itemID string, item map[string]any) *engine.Engine {
+		_ = moduleName
+		_ = item
+		if itemID != id {
+			t.Fatalf("unexpected id: %s", itemID)
+		}
+		return want
+	})
+
+	m.Load(map[string]any{"id": id, "dsn": "x"})
+
+	if Get(id) != want {
+		t.Fatalf("engine mismatch: noerr")
+	}
+}
