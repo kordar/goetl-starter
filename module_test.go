@@ -1,4 +1,4 @@
-package goetl_starter
+package goetlstarter
 
 import (
 	"fmt"

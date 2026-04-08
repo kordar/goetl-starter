@@ -1,12 +1,10 @@
-package goetl_starter
+package goetlstarter
 
 import (
 	"fmt"
-
-	logger "github.com/kordar/gologger"
+	"log/slog"
 
 	"github.com/kordar/goetl/engine"
-	"github.com/spf13/cast"
 )
 
 type EngineLoaderR func(moduleName string, itemID string, item map[string]any) (*engine.Engine, error)
@@ -27,32 +25,32 @@ func (m GoetlModule) Name() string {
 
 func (m GoetlModule) _load(id string, cfg map[string]any) {
 	if id == "" {
-		logger.Fatalf("[%s] the attribute id cannot be empty.", m.Name())
-		return
+		slog.Error("the attribute id cannot be empty", "module", m.Name())
+		panic(fmt.Errorf("[%s] id empty", m.Name()))
 	}
 	if m.load == nil {
-		logger.Fatalf("[%s] load callback cannot be nil. id=%s", m.Name(), id)
-		return
+		slog.Error("load callback cannot be nil", "module", m.Name(), "id", id)
+		panic(fmt.Errorf("[%s] load callback nil", m.Name()))
 	}
 
 	eng, err, provided := m.callLoad(id, cfg)
 	if err != nil {
-		logger.Fatalf("[%s] id=%s err=%v", m.Name(), id, err)
-		return
+		slog.Error("load error", "module", m.Name(), "id", id, "err", err)
+		panic(err)
 	}
 
 	if provided {
-		logger.Infof("[%s] loading module '%s' successfully", m.Name(), id)
+		slog.Info("loading module successfully", "module", m.Name(), "id", id)
 		return
 	}
 
 	if eng == nil {
-		logger.Warnf("[%s] id=%s engine is nil", m.Name(), id)
+		slog.Warn("engine is nil", "module", m.Name(), "id", id)
 		return
 	}
 
 	Provide(id, eng)
-	logger.Infof("[%s] loading module '%s' successfully", m.Name(), id)
+	slog.Info("loading module successfully", "module", m.Name(), "id", id)
 }
 
 func (m GoetlModule) Load(value any) {
@@ -60,15 +58,15 @@ func (m GoetlModule) Load(value any) {
 		return
 	}
 
-	items := cast.ToStringMap(value)
+	items := toStringMap(value)
 	if items["id"] != nil {
-		id := cast.ToString(items["id"])
+		id := toString(items["id"])
 		m._load(id, items)
 		return
 	}
 
 	for key, item := range items {
-		m._load(key, cast.ToStringMap(item))
+		m._load(key, toStringMap(item))
 	}
 }
 
@@ -120,4 +118,33 @@ func getProvided(id string) *engine.Engine {
 	eng := engines[id]
 	mu.RUnlock()
 	return eng
+}
+
+func toString(v any) string {
+	switch x := v.(type) {
+	case string:
+		return x
+	case fmt.Stringer:
+		return x.String()
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+func toStringMap(v any) map[string]any {
+	if v == nil {
+		return map[string]any{}
+	}
+	switch m := v.(type) {
+	case map[string]any:
+		return m
+	case map[any]any:
+		out := make(map[string]any, len(m))
+		for k, val := range m {
+			out[toString(k)] = val
+		}
+		return out
+	default:
+		return map[string]any{}
+	}
 }
