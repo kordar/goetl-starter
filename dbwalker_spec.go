@@ -21,6 +21,7 @@ type DBWalkerSpec interface {
 	ExtractCursor(row map[string]any) (checkpoint.Cursor, error)
 	MapRow(row map[string]any) (any, error)
 	BuildAck(row map[string]any, cur checkpoint.Cursor) (string, error)
+	Options() map[string]any
 }
 
 type DBWalkerSpecOptional interface {
@@ -61,6 +62,13 @@ func (b BaseDBWalkerSpec) BuildAck(row map[string]any, cur checkpoint.Cursor) (s
 }
 func (b BaseDBWalkerSpec) BuildAttrs(row map[string]any, cur checkpoint.Cursor) (map[string]any, error) {
 	return nil, nil
+}
+func (b BaseDBWalkerSpec) Options() map[string]any {
+	return map[string]any{
+		"interval":    10 * time.Minute,
+		"retry":       30 * time.Second,
+		"stopOnError": true,
+	}
 }
 
 func LoadDBWalkerWithSQL(e *engine.Engine, db *sql.DB, spec DBWalkerSpec, interval, retry time.Duration, stopOnError bool) {
